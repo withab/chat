@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat</title>
+</head>
+<body>
+
+    <div>
+        <p id="info">Connecté(é) en tant que Guest</p>
+        --------------------------------------------------
+        <ul id="messages">
+            
+        </ul>
+        --------------------------------------------------
+
+    </div>
+    <br />
+    <label for="message">Envoyer un message</label>
+    <input type="text" id="message">
+    <button id="sendbtn">Send</button>
+    <br />
+    <label for="username">Changer votre nom d'utilisateur: </label>
+    <input type="text" id="username">
+    <button id="updtbtn">Update</button>
+
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket = io();
+        let username = "Guest"
+
+        socket.on('message', (message) => {
+            let li = document.createElement('li');
+            li.innerHTML = `<strong>${message.author}</strong> <em>${getDate(message.date)}</em><br />${message.content}`
+            document.getElementById('messages').appendChild(li);
+        })
+
+        function send() {
+            let content = document.getElementById('message').value.trim();
+            if(content == "") return;
+            socket.emit("message", {
+                author: username,
+                content: content,
+                date: new Date().getTime()
+            })
+            document.getElementById('message').value = ""
+        }
+        function update() {
+            let input = document.getElementById('username').value.trim()
+            if(input == "") return;
+            username = input
+            document.getElementById('username').value = ""
+            document.getElementById('info').innerHTML = `Connecté(é) en tant que ${username}`
+        }
+
+        document.getElementById('sendbtn').addEventListener("click", () => send())
+        document.getElementById('message').addEventListener("keydown", (e) => {
+            if(e.key == "Enter") send()
+        })
+        document.getElementById('updtbtn').addEventListener("click", () => update())
+        document.getElementById('username').addEventListener("keydown", (e) => {
+            if(e.key == "Enter") update()
+        })
+
+        function getDate() {
+            let day = new Date().getDate().toString().length == 1 ? '0' + new Date().getDate().toString() : new Date().getDate()
+            let month = (new Date().getMonth() + 1).toString().length == 1 ? '0' + (new Date().getMonth() + 1).toString() : new Date().getMonth() + 1
+            let year = new Date().getFullYear()
+            let hours = new Date().getHours().toString().length == 1 ? '0' + new Date().getHours().toString() : new Date().getHours()
+            let minutes = new Date().getMinutes().toString().length == 1 ? '0' + new Date().getMinutes().toString() : new Date().getMinutes()
+            let seconds = new Date().getSeconds().toString().length == 1 ? '0' + new Date().getSeconds().toString() : new Date().getSeconds()		
+            return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
+        }
+
+    </script>
+
+</body>
+<style>
+    ul {
+        list-style-type: none;
+    }
+</style>
+</html>
